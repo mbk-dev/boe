@@ -1,6 +1,6 @@
 import boe
 
-val = boe.get_data_frame()
+val = boe.kr.get_bank_rate()
 print(val)
 
 print(boe.__version__)
