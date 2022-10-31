@@ -15,7 +15,7 @@ def get_data_frame(
 ) -> pd.Series:
     request_url = URL_BASE
     resp = requests.get(request_url)
-    while ( not (resp.status_code == 200)):
+    while resp.status_code != 200:
         resp = requests.get(request_url)
     try:
         abc: Response = requests.get(request_url,cookies=resp.cookies)
