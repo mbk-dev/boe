@@ -14,7 +14,9 @@ def get_data_frame(
         end_period: str = None,
 ) -> pd.Series:
     request_url = URL_BASE
-    resp = requests.get(request_url)
+    c = {'boeconsent': 'analytics'}
+    resp = requests.get(request_url,cookies=c)
+
     while ( not (resp.status_code == 200)):
         resp = requests.get(request_url)
     try:
@@ -33,5 +35,7 @@ def get_data_frame(
     df.rename(columns={df.columns[0]: "date"}, inplace=True)
     df['date'] = pd.to_datetime(df['date'], format='%d %b %y')
     df.set_index("date", inplace=True)
+    idx = pd.period_range(start=df.index[-1], end=df.index[0], freq=freq)
+    df = df.reindex(idx, method='pad')
     df.index = df.index.to_period(freq=freq)
     return df.squeeze()
