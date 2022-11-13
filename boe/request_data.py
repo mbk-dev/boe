@@ -14,11 +14,14 @@ def get_data_frame(
         end_period: str = None,
 ) -> pd.Series:
     request_url = URL_BASE
-    c = {'boeconsent': 'analytics'}
-    resp = requests.get(request_url,cookies=c)
-
+    user_agent = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                                     'Chrome/89.0.4389.72 Safari/537.36'}
+    c = {'boeconsent': 'necessary', 'path': '/'}
+    resp = requests.get(request_url,headers=user_agent,cookies=c)
+    i=0
     while ( not (resp.status_code == 200)):
         resp = requests.get(request_url)
+        i = i+1
     try:
         abc: Response = requests.get(request_url,cookies=resp.cookies)
     except requests.exceptions.HTTPError as err:
@@ -28,6 +31,7 @@ def get_data_frame(
             abc.reason,
             URL_BASE,
         ) from err
+    print(i)
     jresp = abc.text
     df = pd.read_html(StringIO(jresp))
     df = df[0]
@@ -35,7 +39,7 @@ def get_data_frame(
     df.rename(columns={df.columns[0]: "date"}, inplace=True)
     df['date'] = pd.to_datetime(df['date'], format='%d %b %y')
     df.set_index("date", inplace=True)
+    df.index = df.index.to_period(freq=freq)
     idx = pd.period_range(start=df.index[-1], end=df.index[0], freq=freq)
     df = df.reindex(idx, method='pad')
-    df.index = df.index.to_period(freq=freq)
     return df.squeeze()
