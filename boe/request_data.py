@@ -6,7 +6,7 @@ from requests import Response
 
 URL_BASE = "https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp#"
 
-
+cookies = {"boeconsent": "necessary"}
 
 def get_data_frame(
         freq: str = "D",
@@ -14,11 +14,8 @@ def get_data_frame(
         end_period: str = None,
 ) -> pd.Series:
     request_url = URL_BASE
-    resp = requests.get(request_url)
-    while ( not (resp.status_code == 200)):
-        resp = requests.get(request_url)
     try:
-        abc: Response = requests.get(request_url,cookies=resp.cookies)
+        abc: Response = requests.get(request_url,cookies=cookies)
     except requests.exceptions.HTTPError as err:
         raise requests.exceptions.HTTPError(
             f"HTTP error fetching data for {URL_BASE}:",
