@@ -6,10 +6,6 @@ from requests import Response
 
 URL_BASE = "https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp#"
 
-# cookie_jar = requests.cookies.RequestsCookieJar()
-# simple_cookie = {"boeconsent": "necessary", "domain": "www.bankofengland.co.uk", "expires": "21 Dec 2022"}
-# cookie_jar.update(simple_cookie)
-
 headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.90 Safari/537.36'}
 
 def get_data_frame(
@@ -20,7 +16,6 @@ def get_data_frame(
     request_url = URL_BASE
     try:
         abc: Response = requests.get(request_url, headers=headers)
-        print(abc.cookies)
     except requests.exceptions.HTTPError as err:
         raise requests.exceptions.HTTPError(
             f"HTTP error fetching data for {URL_BASE}:",
