@@ -14,6 +14,7 @@ def get_data_frame(
         end_period: str = None,
 ) -> pd.Series:
     request_url = URL_BASE
+
     try:
         abc: Response = requests.get(request_url, headers=headers)
     except requests.exceptions.HTTPError as err:
@@ -23,6 +24,7 @@ def get_data_frame(
             abc.reason,
             URL_BASE,
         ) from err
+    print(i)
     jresp = abc.text
     df = pd.read_html(StringIO(jresp))
     df = df[0]
@@ -31,4 +33,6 @@ def get_data_frame(
     df['date'] = pd.to_datetime(df['date'], format='%d %b %y')
     df.set_index("date", inplace=True)
     df.index = df.index.to_period(freq=freq)
+    idx = pd.period_range(start=df.index[-1], end=df.index[0], freq=freq)
+    df = df.reindex(idx, method='pad')
     return df.squeeze()
