@@ -18,10 +18,7 @@ def get_data_frame(
                                      'Chrome/89.0.4389.72 Safari/537.36'}
     c = {'boeconsent': 'necessary', 'path': '/'}
     resp = requests.get(request_url,headers=user_agent,cookies=c)
-    i=0
-    while ( not (resp.status_code == 200)):
-        resp = requests.get(request_url)
-        i = i+1
+
     try:
         abc: Response = requests.get(request_url,cookies=resp.cookies)
     except requests.exceptions.HTTPError as err:
