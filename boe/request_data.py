@@ -24,7 +24,7 @@ def get_data_frame(
             abc.reason,
             URL_BASE,
         ) from err
-    print(i)
+
     jresp = abc.text
     df = pd.read_html(StringIO(jresp))
     df = df[0]
