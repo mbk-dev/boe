@@ -32,7 +32,8 @@ def get_data_frame(
     df.rename(columns={df.columns[0]: "date"}, inplace=True)
     df['date'] = pd.to_datetime(df['date'], format='%d %b %y')
     df.set_index("date", inplace=True)
+    df = df[start_period: end_period]
     df.index = df.index.to_period(freq=freq)
     idx = pd.period_range(start=df.index[-1], end=df.index[0], freq=freq)
     df = df.reindex(idx, method='pad')
-    return df.squeeze()
+    return df.squeeze(axis=1)
