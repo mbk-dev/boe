@@ -38,15 +38,16 @@ def get_data_frame(
     # instead of the previous one - a look-ahead that made every value between
     # two changes wrong.
     df.sort_index(inplace=True)
-    try:
-        df = df.loc[start_period: , :]
-    except KeyError:
-        pass
-    try:
-        df = df.loc[: end_period, :]
-    except KeyError:
-        pass
     df.index = df.index.to_period(freq=freq)
-    idx = pd.period_range(start=df.index[0], end=df.index[-1], freq=freq)
+    # Pad over the FULL change-dates table first, then slice: slicing the raw
+    # change dates by start_period would drop the change that is still in
+    # effect at start_period (a window opening between two changes would lose
+    # the standing rate, or come back empty). Pad through today - the standing
+    # rate stays in effect after the last change.
+    today = pd.Timestamp.today().to_period(freq)
+    idx = pd.period_range(start=df.index[0], end=max(df.index[-1], today), freq=freq)
     df = df.reindex(idx, method='pad')
+    df = df.loc[pd.Period(start_period, freq=freq):]
+    if end_period is not None:
+        df = df.loc[:pd.Period(end_period, freq=freq)]
     return df.squeeze(axis=1)

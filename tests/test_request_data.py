@@ -39,21 +39,40 @@ def fake_page(monkeypatch):
 def test_pads_forward_from_previous_change(fake_page):
     s = request_data.get_data_frame()
 
-    # Ascending daily index spanning the table.
+    # Ascending daily index from the first change through TODAY (the standing
+    # rate stays in effect after the last change).
     assert s.index[0] == pd.Period("2009-03-05", freq="D")
-    assert s.index[-1] == pd.Period("2021-12-16", freq="D")
+    assert s.index[-1] == pd.Timestamp.today().to_period("D")
     # Between 2009-03-05 and 2020-03-19 the rate WAS 0.50 the whole time.
     assert s[pd.Period("2012-06-01", freq="D")] == 0.50
     assert s[pd.Period("2020-03-18", freq="D")] == 0.50
     # From 2020-03-19 until the 2021-12-16 hike it was 0.10.
     assert s[pd.Period("2020-06-01", freq="D")] == 0.10
+    # The last change carries forward to today.
     assert s[pd.Period("2021-12-16", freq="D")] == 0.25
+    assert s.iloc[-1] == 0.25
 
 
-def test_start_period_filters_older_dates(fake_page):
+def test_recent_start_period_returns_the_standing_rate(fake_page):
+    """A window opening after the last change (the nightly only-last-values
+    path) must return the standing rate, not an empty series."""
+    start = (pd.Timestamp.today() - pd.DateOffset(months=2)).strftime("%Y-%m-%d")
+
+    s = request_data.get_data_frame(start_period=start)
+
+    assert len(s) > 0
+    assert s.index[0] == pd.Period(start, freq="D")
+    assert (s == 0.25).all()
+
+
+def test_start_period_keeps_the_rate_in_effect(fake_page):
+    """Slicing must happen AFTER padding: a window opening between two changes
+    starts at start_period and carries the rate set by the PREVIOUS change
+    (otherwise a recent start_period drops the standing rate entirely)."""
     s = request_data.get_data_frame(start_period="2020-01-01")
 
-    assert s.index[0] >= pd.Period("2020-01-01", freq="D")
+    assert s.index[0] == pd.Period("2020-01-01", freq="D")
+    assert s[pd.Period("2020-01-01", freq="D")] == 0.50   # set 2009-03-05
     assert s[pd.Period("2020-06-01", freq="D")] == 0.10
 
 
