@@ -32,6 +32,12 @@ def get_data_frame(
     df.rename(columns={df.columns[0]: "date"}, inplace=True)
     df['date'] = pd.to_datetime(df['date'], format='%d %b %y')
     df.set_index("date", inplace=True)
+    # The Bank-Rate table is served newest-first. Sort ascending BEFORE slicing
+    # and padding: on a descending index label slices invert their meaning, and
+    # reindex(method='pad') fills each day from the NEXT (future) rate change
+    # instead of the previous one - a look-ahead that made every value between
+    # two changes wrong.
+    df.sort_index(inplace=True)
     try:
         df = df.loc[start_period: , :]
     except KeyError:
@@ -41,6 +47,6 @@ def get_data_frame(
     except KeyError:
         pass
     df.index = df.index.to_period(freq=freq)
-    idx = pd.period_range(start=df.index[-1], end=df.index[0], freq=freq)
+    idx = pd.period_range(start=df.index[0], end=df.index[-1], freq=freq)
     df = df.reindex(idx, method='pad')
     return df.squeeze(axis=1)
